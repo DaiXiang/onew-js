@@ -9,9 +9,12 @@ function getCurrentDate() {
 function getTransformedSymbol(symbol) {
     var array = symbol.split('.');
     if (array[1] == "OF") {
-        return `jj${array[0]}`;
+        return `s_jj${array[0]}`;
     }
-    return `${array[1].toLowerCase()}${array[0]}`;
+    if (array[1] == "FX") {
+        return `wh${array[0]}`;
+    }
+    return `s_${array[1].toLowerCase()}${array[0]}`;
 }
 
 function handleResult(data, symbolMapping, resultDict) {
@@ -21,7 +24,8 @@ function handleResult(data, symbolMapping, resultDict) {
         let key = itemArray[0];
         let value = itemArray[1];
         let keyArray = key.split('_');
-        let orginalSymbol = symbolMapping[keyArray[keyArray.length - 1]]
+        let symbolKey = key.replace('v_', '');
+        let orginalSymbol = symbolMapping[symbolKey]
         if (orginalSymbol != undefined) {
             let valueArray = value.split('~');
             let price = valueArray[3];
@@ -42,7 +46,7 @@ function requestLatestPrice(symbolList, resultDict) {
     for (const symbol of symbolList) {
         let transformedSymbol = getTransformedSymbol(symbol);
         symbolMapping[transformedSymbol] = symbol;
-        requestSymbols.push(`s_${transformedSymbol}`);
+        requestSymbols.push(transformedSymbol);
     }
     
     let symbols = requestSymbols.join(',');

@@ -51,6 +51,9 @@ function handleResult(result) {
         } else if (type == 26) { // 封闭基金
             let stock = Stock.create(`${symbol}.OF`, name);
             stocks.push(stock);
+        } else if (type == 71) { // 外汇
+            let stock = Stock.create(`${symbol.toUpperCase()}.FX`, name);
+            stocks.push(stock);
         }
     }
     
