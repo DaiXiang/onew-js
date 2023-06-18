@@ -23,9 +23,8 @@ function handleResult(data, symbolMapping, resultDict) {
         let itemArray = dataItem.split('=');
         let key = itemArray[0];
         let value = itemArray[1];
-        let keyArray = key.split('_');
-        let symbolKey = key.replace('v_', '');
-        let orginalSymbol = symbolMapping[symbolKey]
+        let symbolKey = key.replace('v_', '').trim();
+        let orginalSymbol = symbolMapping[symbolKey];
         if (orginalSymbol != undefined) {
             let valueArray = value.split('~');
             let price = valueArray[3];
