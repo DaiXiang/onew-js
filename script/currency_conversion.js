@@ -15,12 +15,25 @@ function requestConversionIfNeed(fromCurrency, toCurrency, callback) {
         return;
     }
     
-    requestConversion(fromCurrency, toCurrency, callback);
+    requestConversion("fastly", fromCurrency, toCurrency, function(result) {
+        if (result != null && result !== "") {
+            callback(result);
+            return;
+        }
+        requestConversion("cdn", fromCurrency, toCurrency, function(result) {
+            if (result != null && result !== "") {
+                callback(result);
+                return;
+            }
+            requestConversion("gcore", fromCurrency, toCurrency, callback);
+        });
+    });
 }
 
-function requestConversion(fromCurrency, toCurrency, callback) {
-    let baseUrl = "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/" + fromCurrency.toLowerCase() + "/" + toCurrency.toLowerCase() + ".json";
-    let request = HTTPRequest.createWithBaseUrl(baseUrl);
+function requestConversion(subDomain, fromCurrency, toCurrency, callback) {
+    let baseUrl = "https://" + subDomain + ".jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/" + fromCurrency.toLowerCase() + "/" + toCurrency.toLowerCase() + ".json";
+    let request = HTTPRequest.createWithBaseUrl(baseUrl)
+        .timeout(3);
     HTTPClient.create()
         .request(request)
         .onCompletion(function(resp) {
