@@ -44,6 +44,12 @@ function requestConversion(subDomain, fromCurrency, toCurrency, callback) {
             
             let data = JSON.parse(resp.data);
             let rate = data[toCurrency.toLowerCase()];
+
+            // rate is zero, not available
+            if (rate == undefined || rate == 0) {
+                callback(null);
+                return;
+            }
             
             let cachedKey = fromCurrency + "/" + toCurrency + "_" + getCurrentDate();
             $cache.save(cachedKey, rate);
