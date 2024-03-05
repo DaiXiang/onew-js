@@ -31,7 +31,8 @@ function requestConversionIfNeed(fromCurrency, toCurrency, callback) {
 }
 
 function requestConversion(subDomain, fromCurrency, toCurrency, callback) {
-    let baseUrl = "https://" + subDomain + ".jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/" + fromCurrency.toLowerCase() + "/" + toCurrency.toLowerCase() + ".json";
+    // https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/btc.min.json
+    let baseUrl = "https://" + subDomain + ".jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/" + fromCurrency.toLowerCase() + ".min.json";
     let request = HTTPRequest.createWithBaseUrl(baseUrl)
         .timeout(3);
     HTTPClient.create()
@@ -43,8 +44,8 @@ function requestConversion(subDomain, fromCurrency, toCurrency, callback) {
             }
             
             let data = JSON.parse(resp.data);
-            let rate = data[toCurrency.toLowerCase()];
-
+            let rate = data[fromCurrency.toLowerCase()][toCurrency.toLowerCase()];
+            
             // rate is zero, not available
             if (rate == undefined || rate == 0) {
                 callback(null);
