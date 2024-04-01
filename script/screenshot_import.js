@@ -3,19 +3,25 @@ function handleTextNode() {
     let allText = $argument.get("allText");
     
     if (/名称.+金额\/昨日收益/.test(allText)) { // 支付宝基金持仓列表
-        nodeList = handleByNameAndAmount(nodeList, /金额\/昨日收益/, /名称/, false, true);
+        nodeList = handleByNameAndAmount(nodeList, /金额\/昨日收益/, /名称/, false, true, 1);
     } else if (/(名称代码|代码名称).+市值 ?[\/|] ?数量|市值 ?[\/|] ?数量.+(名称代码|代码名称)/.test(allText)) { // 港美股券商持仓列表
-        nodeList = handleByNameAndAmount(nodeList, /市值 ?[\/|] ?数量/, /名称代码|代码名称/, true, false);
+        nodeList = handleByNameAndAmount(nodeList, /市值 ?[\/|] ?数量/, /名称代码|代码名称/, true, false, 2);
     } else if (/金额\/今日收益/.test(allText)) { // 京东金融基金持仓列表
-        nodeList = handleByNameAndAmount(nodeList, /金额\/今日收益/, /持有收益率排序/, false, true);
+        nodeList = handleByNameAndAmount(nodeList, /金额\/今日收益/, /持有收益率排序/, false, true, 1);
     } else if (/(证券|名称) ?\/ ?市值| 市值/.test(allText)) { // 国内证券 App 持仓列表
-        nodeList = handleByCommon(nodeList, /(证券|名称) ?\/ ?市值|^市值/);
+        nodeList = handleByCommon(nodeList, /(证券|名称) ?\/ ?市值|^市值/, 2);
     } else if (/公募基金资产/.test(allText)) { // 蜻蜓点金基金持仓列表
-        nodeList = handleByCommon2(nodeList, /交易查询/, 0);
-    } else if (/资产明细/.test(allText)) { // 腾讯理财通
-        nodeList = handleByCommon2(nodeList, /资产明细/, 1);
+        nodeList = handleByCommon2(nodeList, /交易查询/, 0, 1);
+    } else if (/资产明细/.test(allText)) { // 腾讯理财通基金列表
+        nodeList = handleByCommon2(nodeList, /资产明细/, 1, 1);
     } else if (/金额.+昨日收益.+持仓收益\/率/.test(allText)) { // 招商银行基金持仓列表
-        nodeList = handleByCommon3(nodeList, /^金额$/);
+        nodeList = handleByCommon3(nodeList, /^金额$/, 1);
+    } else if (/交易平台.+Web3.+现货/.test(allText)) { // 币安交易所现货列表
+        nodeList = handleByCurrency(nodeList, /^资产$/, 3);
+    } else if (/赚币.+按币种.+欧易/.test(allText)) { // 欧易交易所
+        nodeList = handleByCurrency(nodeList, /^按币种$/, 3);
+    } else if (/资金账户.+HyperCard.+全部资产/.test(allText)) { // HyperPay 钱包
+        nodeList = handleByCurrency(nodeList, /^全部资产$/, 3);
     }
     
     for (const item of nodeList) {
@@ -28,7 +34,39 @@ function handleTextNode() {
     $callback.onCompletion();
 }
 
-function handleByCommon3(list, keyOfAnchor) {
+function handleByCurrency(list, keyOfCurrency, source) {
+    // 查找锚点-金额
+    let amountAnchor = list.find(node => keyOfCurrency.test(node.text));
+    if (amountAnchor == undefined) return list;
+    
+    // 筛选出与锚点同列，且在其下方的文本
+    var amountItems = list.filter(function(item) {
+        return isUnder(amountAnchor.rect, item.rect) && isNumberAndNotZero(item);
+    });
+    
+    // 按 y 坐标升序排序
+    amountItems.sort((a, b) => a.rect.y - b.rect.y);
+    
+    // 选出与金额同行的，成对标记
+    for (const anchor of amountItems) {
+        let items = list.filter(function(item) {
+            return isSameRowAndBefore(anchor.rect, item.rect) && item.text.length >= 2;
+        });
+        if (items.length > 0) {
+            var preItem = items[0];
+            preItem.isHead = true;
+            preItem.source = source;
+            preItem.type = 1;
+            
+            anchor.type = 2;
+            preItem.next = anchor;
+        }
+    }
+    
+    return list;
+}
+
+function handleByCommon3(list, keyOfAnchor, source) {
     // 查找锚点
     let anchor = list.find(node => keyOfAnchor.test(node.text));
     if (anchor == undefined) return list;
@@ -58,13 +96,14 @@ function handleByCommon3(list, keyOfAnchor) {
         items[index + 1].type = 2;
         items[index - 1].type = 1;
         items[index - 1].isHead = true;
+        items[index - 1].source = source;
         items[index - 1].next = items[index + 1];
     }
     
     return list;
 }
 
-function handleByCommon2(list, keyOfAnchor, space) {
+function handleByCommon2(list, keyOfAnchor, space, source) {
     // 查找锚点
     let anchor = list.find(node => keyOfAnchor.test(node.text));
     if (anchor == undefined) return list;
@@ -91,6 +130,7 @@ function handleByCommon2(list, keyOfAnchor, space) {
             indexOfName = index - (1 + space);
             items[indexOfName].type = 1;
             items[indexOfName].isHead = true;
+            items[indexOfName].source = source;
             items[indexOfName].next = items[index];
         }
     }
@@ -98,7 +138,7 @@ function handleByCommon2(list, keyOfAnchor, space) {
     return list;
 }
                                      
-function handleByCommon(list, keyOfAnchor) {
+function handleByCommon(list, keyOfAnchor, source) {
     // 查找锚点
     let anchor = list.find(node => keyOfAnchor.test(node.text));
     if (anchor == undefined) return list;
@@ -127,6 +167,7 @@ function handleByCommon(list, keyOfAnchor) {
             items[index].type = 2;
             items[indexOfName].type = 1;
             items[indexOfName].isHead = true;
+            items[indexOfName].source = source;
             items[indexOfName].next = items[index];
             
             count += 1;
@@ -147,6 +188,7 @@ function handleByCommon(list, keyOfAnchor) {
             if (Math.abs(avgSpace - space) < allowableErrValue) {
                 items[index].type = 1;
                 items[index].isHead = true;
+                items[index].source = source;
                 items[indexOfFirstNumber].type = 2;
                 items[index].next = items[indexOfFirstNumber];
                 break;
@@ -159,6 +201,7 @@ function handleByCommon(list, keyOfAnchor) {
             items[indexOfFirstNumber].type = 2;
             items[0].type = 1;
             items[0].isHead = true;
+            items[0].source = source;
             items[0].next = items[indexOfFirstNumber];
         }
     }
@@ -166,7 +209,7 @@ function handleByCommon(list, keyOfAnchor) {
     return list;
 }
 
-function handleByNameAndAmount(list, keyOfAmount, keyOfName, fixAmount, fixName) {
+function handleByNameAndAmount(list, keyOfAmount, keyOfName, fixAmount, fixName, source) {
     // 查找锚点-金额
     let amountAnchor = list.find(node => keyOfAmount.test(node.text));
     if (amountAnchor == undefined) return list;
@@ -220,6 +263,7 @@ function handleByNameAndAmount(list, keyOfAmount, keyOfName, fixAmount, fixName)
         if (items.length > 0) {
             var preItem = items[0];
             preItem.isHead = true;
+            preItem.source = source;
             preItem.type = 1;
             for (var index = 1; index < items.length; index++) {
                 items[index].type = 1;
@@ -261,6 +305,10 @@ function fixAmountColumn(list) {
     }
     
     return newItems;
+}
+
+function isNumberAndNotZero(node) {
+    return isNumber(node) && node.text > 0;
 }
 
 function isNumber(node) {
@@ -321,6 +369,13 @@ function isSameColumnAndUnder(anchorRect, rect) {
         return false;
     }
     return isSameColumn(anchorRect, rect);
+}
+
+function isUnder(anchorRect, rect) {
+    if (rect.y >= anchorRect.y + anchorRect.height) {
+        return true;
+    }
+    return false;
 }
 
 function isSameRow(anchorRect, rect) {
