@@ -18,8 +18,8 @@ function handleTextNode() {
         nodeList = handleByCommon3(nodeList, /^金额$/, 1);
     } else if (/交易平台.+Web3.+现货/.test(allText)) { // 币安交易所现货列表
         nodeList = handleByCurrency(nodeList, /^资产$/, 3);
-    } else if (/赚币.+按币种.+欧易/.test(allText)) { // 欧易交易所
-        nodeList = handleByCurrency(nodeList, /^按币种$/, 3);
+    } else if (/赚币.+按币种/.test(allText)) { // 欧易交易所
+        nodeList = handleByCurrency(nodeList, /^按币种/, 3);
     } else if (/资金账户.+HyperCard.+全部资产/.test(allText)) { // HyperPay 钱包
         nodeList = handleByCurrency(nodeList, /^全部资产$/, 3);
     }
@@ -55,6 +55,7 @@ function handleByCurrency(list, keyOfCurrency, source) {
         if (items.length > 0) {
             var preItem = items[0];
             preItem.isHead = true;
+            preItem.text = fixCurrencyIfNeed(preItem.text);
             preItem.source = source;
             preItem.type = 1;
             
@@ -396,6 +397,11 @@ function isSameColumn(anchorRect, rect) {
         return false;
     }
     return true;
+}
+
+function fixCurrencyIfNeed(currency) {
+    var fixedCurrency = currency.replace(/[^a-zA-Z]/g, "");
+    return fixedCurrency;
 }
 
 function fixNameIfNeed(name) {
