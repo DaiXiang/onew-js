@@ -50,7 +50,7 @@ function handleByCurrency(list, keyOfCurrency, source) {
     // 选出与金额同行的，成对标记
     for (const anchor of amountItems) {
         let items = list.filter(function(item) {
-            return isSameRowAndBefore(anchor.rect, item.rect) && item.text.length >= 2;
+            return isSameRowAndBefore(anchor.rect, item.rect) && isCurrency(item);
         });
         if (items.length > 0) {
             var preItem = items[0];
@@ -306,6 +306,10 @@ function fixAmountColumn(list) {
     }
     
     return newItems;
+}
+
+function isCurrency(node) {
+    return /[a-zA-Z]{2,}/.test(node.text);
 }
 
 function isNumberAndNotZero(node) {
