@@ -7,14 +7,16 @@ function getCurrentDate() {
 }
 
 function getTransformedSymbol(symbol) {
-    var array = symbol.split('.');
-    if (array[1] == "OF") {
-        return `s_jj${array[0]}`;
+    let lastDotIndex = symbol.lastIndexOf(".");
+    let part1 = symbol.substring(0, lastDotIndex);
+    let part2 = symbol.substring(lastDotIndex + 1);
+    if (part2 == "OF") {
+        return `s_jj${part1}`;
     }
-    if (array[1] == "FX") {
-        return `wh${array[0]}`;
+    if (part2 == "FX") {
+        return `wh${part1}`;
     }
-    return `s_${array[1].toLowerCase()}${array[0]}`;
+    return `s_${part2.toLowerCase()}${part1}`;
 }
 
 function handleResult(data, symbolMapping, resultDict) {
