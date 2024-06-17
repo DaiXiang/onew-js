@@ -18,7 +18,7 @@ function handleTextNode() {
         nodeList = handleByCommon3(nodeList, /^金额$/, 1);
     } else if (/交易平台.+Web3.+现货/.test(allText)) { // 币安交易所现货列表
         nodeList = handleByCurrency(nodeList, /^资产$/, 3);
-    } else if (/赚币.+按币种/.test(allText)) { // 欧易交易所
+    } else if (/(赚币.+按币种|按币种.+赚币)/.test(allText)) { // 欧易交易所
         nodeList = handleByCurrency(nodeList, /^按币种/, 3);
     } else if (/资金账户.+HyperCard.+全部资产/.test(allText)) { // HyperPay 钱包
         nodeList = handleByCurrency(nodeList, /^全部资产$/, 3);
@@ -405,7 +405,7 @@ function isSameColumn(anchorRect, rect) {
 
 function fixCurrencyIfNeed(currency) {
     var fixedCurrency = currency.replace(/[^a-zA-Z]/g, "");
-    return fixedCurrency;
+    return fixedCurrency.toUpperCase();
 }
 
 function fixNameIfNeed(name) {
