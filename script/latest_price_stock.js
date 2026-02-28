@@ -3,11 +3,14 @@ function isMyStock(stock) {
         return false;
     }
 
-    if (stock.stockId != undefined && stock.stockId.length > 0 && stock.stockId.startsWith("frs")) {
+    if (stock.stockId != undefined && stock.stockId.length > 0 &&
+        (stock.stockId.startsWith("frs") || stock.stockId.startsWith("msf"))) {
         return false;
     }
 
-    return !stock.symbol.endsWith(".FUT") && !stock.symbol.endsWith(".CFD");
+    return !stock.symbol.endsWith(".FUT") &&
+        !stock.symbol.endsWith(".CFD") &&
+        !stock.symbol.endsWith(".CC");
 }
 
 function getTransformedSymbol(symbol) {
