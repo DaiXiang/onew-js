@@ -3,7 +3,21 @@ function isMyStock(stock) {
         return false;
     }
 
-    return stock.stockId.startsWith("msf");
+    return stock.stockId.startsWith("msf") && !hasFundsquareISIN(stock.symbol);
+}
+
+function hasFundsquareISIN(symbol) {
+    if (symbol == null) {
+        return false;
+    }
+
+    let normalized = `${symbol}`.trim().toUpperCase();
+    if (!normalized.endsWith(".FUND")) {
+        return false;
+    }
+
+    let isin = normalized.substring(0, normalized.length - 5);
+    return /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(isin);
 }
 
 function buildDailyCacheKey(prefix) {
