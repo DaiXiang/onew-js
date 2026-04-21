@@ -183,7 +183,61 @@ function extractLatestPrice(html) {
         return priceText;
     }
 
+    let summaryPrice = extractLatestPriceFromSummary(cleaned);
+    if (summaryPrice != null && summaryPrice !== "") {
+        return summaryPrice;
+    }
+
     return null;
+}
+
+function extractPriceValue(text) {
+    let normalized = normalizeText(text);
+    let match = normalized.match(/([0-9][0-9.,]*)\s*[A-Z]{3}\b/i);
+    if (match == null || match[1] == null || match[1] === "") {
+        return null;
+    }
+
+    return `${match[1]}`.replace(/\s+/g, "");
+}
+
+function extractLatestPriceFromSummary(cleanedHtml) {
+    let rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    let previousPrice = null;
+
+    while ((rowMatch = rowRegex.exec(cleanedHtml)) != null) {
+        let cells = [];
+        let cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+        let cellMatch;
+        while ((cellMatch = cellRegex.exec(rowMatch[1])) != null) {
+            cells.push(cellMatch[1]);
+        }
+
+        if (cells.length < 2) {
+            continue;
+        }
+
+        let label = stripHtmlTags(cells[0]).toUpperCase();
+        if (label !== "LAST NAV" && label !== "PREVIOUS NAV") {
+            continue;
+        }
+
+        let valueText = cells.slice(1).map(stripHtmlTags).join(" ");
+        let price = extractPriceValue(valueText);
+        if (price == null || price === "") {
+            continue;
+        }
+
+        if (label === "LAST NAV") {
+            return price;
+        }
+        if (previousPrice == null) {
+            previousPrice = price;
+        }
+    }
+
+    return previousPrice;
 }
 
 function parseSearchCandidates(html) {
