@@ -11,7 +11,8 @@ function isMyStock(stock) {
     return !stock.symbol.endsWith(".FUT") &&
         !stock.symbol.endsWith(".CFD") &&
         !stock.symbol.endsWith(".FUND") &&
-        !stock.symbol.endsWith(".CC");
+        !stock.symbol.endsWith(".CC") &&
+        !stock.symbol.endsWith(".OPT");
 }
 
 function getTransformedSymbol(symbol) {
